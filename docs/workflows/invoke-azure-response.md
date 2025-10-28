@@ -38,22 +38,10 @@ Due to the alignment between `InvokeAzureResponse` and `InvokeAzureAgent`, a sha
         value: =System.CurrentDateTime
   output:
     autoSend: true
-    messages: =Local.AgentResponse
-    format:
-      object: Local.AgentResponseObject
-      schema: |-
-        {
-          "type": "object",
-          "properties": {
-            ...
-          },
-          "required": [...],
-          "additionalProperties": false
-        }    
-    parameters:
-      - name: isComplete
-        variable: Local.IsComplete       
-  user:
+    messages: Local.AgentResponse
+    responseObject: Local.AgentResponseObject
+    structuredOutputs: Local.AgentStructuredOutputs
+  externalLoop:
     variable: Local.UserInput
     when: =!Local.IsComplete
     maxIterations: 4

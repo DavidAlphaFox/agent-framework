@@ -53,7 +53,7 @@ as well as re-adding support for _Response Format_ that is supported in existing
     messages: Local.AgentResponse
     responseObject: Local.AgentResponseObject
     structuredOutputs: Local.AgentStructuredOutputs
-  userInLoop:
+  externalLoop:
     variable: Local.UserInput
     when: =!Local.IsComplete
     maxIterations: 4
@@ -74,10 +74,10 @@ Property|Type|Description|Required|Default
 `output.messages`|`PropertyPath`|The scoped variable to store the agent response messages.|Optional
 `output.responseObject`|`PropertyPath`|The scoped variable to store the structured response object.  Only assigned when for agent with response format of `json_object` or `json_schema`|Optional
 `output.structuredOutputs`|`PropertyPath`|Mapping of structured output parameters from the agent to scoped variables.|Optional
-`userInLoop`|`Node`|Defines if human input is needed.|Optional
-`userInLoop.when`|`BoolExpression`|Expression that evaluates to true when user input is needed.|Required
-`userInLoop.variable`|`PropertyPath`|The scoped variable to store user input.|Optional
-`userInLoop.maxIterations`|`IntExpression`|Maximum number of iterations to allow.|Optional|No limit
+`externalLoop`|`Node`|Defines if external input is needed.|Optional
+`externalLoop.when`|`BoolExpression`|Expression that evaluates to true when input is needed.|Required
+`externalLoop.variable`|`PropertyPath`|The scoped variable to store input.|Optional
+`externalLoop.maxIterations`|`IntExpression`|Maximum number of iterations to allow.|Optional|No limit
 
 **StructuredInput**:
 
@@ -152,9 +152,9 @@ Values for structured outputs can be captured to scoped variables.
     structuredOutputs: Local.StructuredOutputs
 ```
 
-#### 4. Human in the Loop - No limit
+#### 4. External Input - No limit
 
-The criteria for soliciting user input can be based on the agent response (e.g. low confidence).
+The criteria for soliciting input can be based on the agent response (e.g. low confidence).
 When `maxIterations` is not specified, no limit is enforced.
 
 ```yaml
@@ -168,21 +168,20 @@ When `maxIterations` is not specified, no limit is enforced.
         value: Local.IntentConfidence
       - name: intent
         value: Local.UserIntent
-  userInLoop:
+  externalLoop:
     when: =Local.IntentConfidence < 0.8
 ```
 
-#### 5. Human in the Loop - Limit Iterations
+#### 5. External Input - Limit Iterations
 
-Criteria for soliciting user input may also be based on the user input,
-then the user response will be the final message in the invocation loop.
+Criteria for soliciting input may also be based on the resulting input.
 
 ```yaml
 - kind: InvokeAzureAgent
   id: invoke_agent_1
   agent:
     name: DemoAgent
-  userInLoop:
+  externalLoop:
     variable: Local.UserInput
     when: =!IsBlank(Find("APPROVED", Upper(Local.UserInput.Text)))
     maxIterations: =Env.MaximumInputRequests
