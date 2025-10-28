@@ -44,10 +44,8 @@ as well as re-adding support for _Response Format_ that is supported in existing
   input:
     messages: =UserMessage("Hi!")
     parameters:
-      - name: location
-        value: Seattle, WA, USA
-      - name: now
-        value: =System.CurrentDateTime
+      location: Seattle, WA, USA
+      now: =System.CurrentDateTime
   output:
     autoSend: true
     messages: Local.AgentResponse
@@ -130,10 +128,8 @@ Values for structured inputs can be provided to the agent as literal values or e
   input:
     messages: =UserMessage("Where a good place to hike?")
     parameters:
-      - name: location
-        value: Seattle, WA, USA
-      - name: now
-        value: =System.CurrentDateTime    
+      location: Seattle, WA, USA
+      now: =System.CurrentDateTime
   output:
     messages: Local.AgentResponse
 ```
@@ -162,12 +158,6 @@ When `maxIterations` is not specified, no limit is enforced.
   id: invoke_agent_1
   agent:
     name: DemoAgent
-  output:
-    parameters:
-      - name: confidence
-        value: Local.IntentConfidence
-      - name: intent
-        value: Local.UserIntent
   externalLoop:
     when: =Local.IntentConfidence < 0.8
 ```

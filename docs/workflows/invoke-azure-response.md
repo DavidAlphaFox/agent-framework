@@ -32,10 +32,8 @@ Due to the alignment between `InvokeAzureResponse` and `InvokeAzureAgent`, a sha
   input:
     messages: =UserMessage("Hi!")
     parameters:
-      - name: location
-        value: Seattle, WA, USA
-      - name: now
-        value: =System.CurrentDateTime
+      location: Seattle, WA, USA
+      now: =System.CurrentDateTime
   output:
     autoSend: true
     messages: Local.AgentResponse
