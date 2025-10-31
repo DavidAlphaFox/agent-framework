@@ -260,12 +260,12 @@ public sealed class BasicStreamingTests : IAsyncDisposable
 
         if (useMultiMessageAgent)
         {
-            this._app.MapAGUIAgent("/agent", (IEnumerable<ChatMessage> messages) =>
+            this._app.MapAGUIAgent("/agent", (IEnumerable<ChatMessage> messages, IEnumerable<AITool> tools) =>
                 this._app.Services.GetRequiredService<FakeMultiMessageAgent>());
         }
         else
         {
-            this._app.MapAGUIAgent("/agent", (IEnumerable<ChatMessage> messages) =>
+            this._app.MapAGUIAgent("/agent", (IEnumerable<ChatMessage> messages, IEnumerable<AITool> tools) =>
                 this._app.Services.GetRequiredService<FakeChatClientAgent>());
         }
 

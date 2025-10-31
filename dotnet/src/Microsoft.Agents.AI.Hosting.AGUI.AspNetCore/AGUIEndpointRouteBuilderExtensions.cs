@@ -2,11 +2,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
+using System.Text.Json;
 using Microsoft.Agents.AI.Hosting.AGUI.AspNetCore.Shared;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,22 +23,39 @@ public static class AGUIEndpointRouteBuilderExtensions
     /// </summary>
     /// <param name="endpoints">The endpoint route builder.</param>
     /// <param name="pattern">The URL pattern for the endpoint.</param>
-    /// <param name="agentFactory">Factory function to create an agent instance.</param>
+    /// <param name="agentFactory">Factory function to create an agent instance. Receives messages and tools from the client.</param>
     /// <returns>An <see cref="IEndpointConventionBuilder"/> for the mapped endpoint.</returns>
     public static IEndpointConventionBuilder MapAGUIAgent(
         this IEndpointRouteBuilder endpoints,
         string pattern,
-        Func<IEnumerable<ChatMessage>, AIAgent> agentFactory)
+        Func<IEnumerable<ChatMessage>, IEnumerable<AITool>, AIAgent> agentFactory)
     {
-        return endpoints.MapPost(pattern, async ([FromBody] RunAgentInput? input, HttpContext context, CancellationToken cancellationToken) =>
+        return endpoints.MapPost(pattern, async context =>
         {
-            if (input is null)
+            var cancellationToken = context.RequestAborted;
+
+            RunAgentInput? input;
+            try
             {
-                return Results.BadRequest();
+                input = await JsonSerializer.DeserializeAsync(context.Request.Body, AGUIJsonSerializerContext.Default.RunAgentInput, cancellationToken).ConfigureAwait(false);
+            }
+            catch (JsonException)
+            {
+                await TypedResults.BadRequest().ExecuteAsync(context).ConfigureAwait(false);
+                return;
             }
 
-            var messages = input.Messages.AsChatMessages();
-            var agent = agentFactory(messages);
+            if (input is null)
+            {
+                await TypedResults.BadRequest().ExecuteAsync(context).ConfigureAwait(false);
+                return;
+            }
+
+            var messages = input.Messages.AsChatMessages(AGUIJsonSerializerContext.Default.Options);
+            var contextValues = input.Context;
+            var forwardedProps = input.ForwardedProperties;
+            IEnumerable<AITool> tools = input.Tools?.AsAITools() ?? [];
+            var agent = agentFactory(messages, tools);
 
             var events = agent.RunStreamingAsync(
                 messages,
@@ -47,10 +63,11 @@ public static class AGUIEndpointRouteBuilderExtensions
                 .AsAGUIEventStreamAsync(
                     input.ThreadId,
                     input.RunId,
+                    AGUIJsonSerializerContext.Default.Options,
                     cancellationToken);
 
             var logger = context.RequestServices.GetRequiredService<ILogger<AGUIServerSentEventsResult>>();
-            return new AGUIServerSentEventsResult(events, logger);
+            await new AGUIServerSentEventsResult(events, logger).ExecuteAsync(context).ConfigureAwait(false);
         });
     }
 }
