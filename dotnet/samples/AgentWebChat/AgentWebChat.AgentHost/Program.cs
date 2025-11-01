@@ -80,7 +80,7 @@ var literatureAgent = builder.AddAIAgent("literator",
 
 builder.AddSequentialWorkflow("science-sequential-workflow", [chemistryAgent, mathsAgent, literatureAgent]).AddAsAIAgent();
 builder.AddConcurrentWorkflow("science-concurrent-workflow", [chemistryAgent, mathsAgent, literatureAgent]).AddAsAIAgent();
-builder.AddOpenAIResponses();
+builder.Services.AddOpenAIResponses();
 
 var app = builder.Build();
 
