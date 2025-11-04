@@ -27,13 +27,13 @@ app.MapAGUIAgent("/", (messages, tools) =>
         .GetChatClient(deploymentName)
         .CreateAIAgent(
             name: "AGUIAssistant",
-            tools: [.. tools, .. new AITool[]{
+            tools: [.. tools,
                 AIFunctionFactory.Create(
                     () => DateTimeOffset.UtcNow,
                     name: "get_current_time",
                     description: "Get the current UTC time."
                 )
-            }]);
+            ]);
 });
 
 await app.RunAsync();
