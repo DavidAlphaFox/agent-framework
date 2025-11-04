@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using Microsoft.Agents.AI.Hosting.AGUI.AspNetCore.Shared;
 using Microsoft.AspNetCore.Builder;
@@ -33,6 +34,7 @@ public static class AGUIEndpointRouteBuilderExtensions
         return endpoints.MapPost(pattern, async context =>
         {
             var cancellationToken = context.RequestAborted;
+            var logger = context.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("MapAGUIAgent");
 
             RunAgentInput? input;
             try
@@ -52,10 +54,43 @@ public static class AGUIEndpointRouteBuilderExtensions
             }
 
             var messages = input.Messages.AsChatMessages(AGUIJsonSerializerContext.Default.Options);
+            logger.LogInformation("[MapAGUIAgent] Received request - ThreadId: {ThreadId}, RunId: {RunId}, MessageCount: {MessageCount}",
+                input.ThreadId, input.RunId, messages.Count());
+
+            for (int i = 0; i < messages.Count(); i++)
+            {
+                var msg = messages.ElementAt(i);
+                logger.LogDebug("[MapAGUIAgent]   Message[{Index}]: Role={Role}, ContentCount={ContentCount}",
+                    i, msg.Role.Value, msg.Contents.Count);
+
+                foreach (var content in msg.Contents)
+                {
+                    if (content is FunctionCallContent fcc)
+                    {
+                        logger.LogDebug("[MapAGUIAgent]     - FunctionCallContent: Name={Name}, CallId={CallId}",
+                            fcc.Name, fcc.CallId);
+                    }
+                    else if (content is FunctionResultContent frc)
+                    {
+                        logger.LogDebug("[MapAGUIAgent]     - FunctionResultContent: CallId={CallId}, Result={Result}",
+                            frc.CallId, frc.Result);
+                    }
+                    else
+                    {
+                        logger.LogDebug("[MapAGUIAgent]     - {ContentType}", content.GetType().Name);
+                    }
+                }
+            }
+
             var contextValues = input.Context;
             var forwardedProps = input.ForwardedProperties;
             IEnumerable<AITool> tools = input.Tools?.AsAITools() ?? [];
+
+            logger.LogInformation("[MapAGUIAgent] Creating agent with {ToolCount} tools", tools.Count());
             var agent = agentFactory(messages, tools);
+
+            logger.LogInformation("[MapAGUIAgent] Starting agent.RunStreamingAsync for ThreadId: {ThreadId}, RunId: {RunId}",
+                input.ThreadId, input.RunId);
 
             var events = agent.RunStreamingAsync(
                 messages,
@@ -66,8 +101,8 @@ public static class AGUIEndpointRouteBuilderExtensions
                     AGUIJsonSerializerContext.Default.Options,
                     cancellationToken);
 
-            var logger = context.RequestServices.GetRequiredService<ILogger<AGUIServerSentEventsResult>>();
-            await new AGUIServerSentEventsResult(events, logger).ExecuteAsync(context).ConfigureAwait(false);
+            var sseLogger = context.RequestServices.GetRequiredService<ILogger<AGUIServerSentEventsResult>>();
+            await new AGUIServerSentEventsResult(events, sseLogger).ExecuteAsync(context).ConfigureAwait(false);
         });
     }
 }
