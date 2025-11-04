@@ -473,19 +473,13 @@ internal sealed class InMemoryResponsesService : IResponsesService, IDisposable
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            // Determine error code based on exception message
-            // Azure OpenAI returns HTTP 400 with "content_filter" in the error message
-            string errorCode = ex.Message.Contains("content_filter", StringComparison.OrdinalIgnoreCase)
-                ? "content_filter"
-                : "execution_error";
-
             // Update response status to failed
             state.Response = state.Response! with
             {
                 Status = ResponseStatus.Failed,
                 Error = new ResponseError
                 {
-                    Code = errorCode,
+                    Code = "execution_error",
                     Message = ex.Message
                 }
             };
