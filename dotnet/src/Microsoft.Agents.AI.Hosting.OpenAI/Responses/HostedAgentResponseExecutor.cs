@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Agents.AI.Hosting.OpenAI.Conversations;
 using Microsoft.Agents.AI.Hosting.OpenAI.Responses.Models;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,46 +20,32 @@ internal sealed class HostedAgentResponseExecutor : IResponseExecutor
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<HostedAgentResponseExecutor> _logger;
-    private readonly IConversationStorage? _conversationStorage;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="HostedAgentResponseExecutor"/> class.
     /// </summary>
     /// <param name="serviceProvider">The service provider used to resolve hosted agents.</param>
     /// <param name="logger">The logger instance.</param>
-    /// <param name="conversationStorage">Optional conversation storage for reading and updating conversation history.</param>
     public HostedAgentResponseExecutor(
         IServiceProvider serviceProvider,
-        ILogger<HostedAgentResponseExecutor> logger,
-        IConversationStorage? conversationStorage = null)
+        ILogger<HostedAgentResponseExecutor> logger)
     {
         ArgumentNullException.ThrowIfNull(serviceProvider);
         ArgumentNullException.ThrowIfNull(logger);
 
         this._serviceProvider = serviceProvider;
         this._logger = logger;
-        this._conversationStorage = conversationStorage;
     }
 
     /// <inheritdoc/>
-    public IAsyncEnumerable<StreamingResponseEvent> ExecuteAsync(
+    public async IAsyncEnumerable<StreamingResponseEvent> ExecuteAsync(
         AgentInvocationContext context,
         CreateResponse request,
-        CancellationToken cancellationToken = default)
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         // Validate and resolve agent synchronously to ensure validation errors are thrown immediately
         AIAgent agent = this.ResolveAgent(request);
 
-        // Return the actual async enumerable implementation
-        return this.ExecuteAsyncCoreAsync(agent, context, request, cancellationToken);
-    }
-
-    private async IAsyncEnumerable<StreamingResponseEvent> ExecuteAsyncCoreAsync(
-        AIAgent agent,
-        AgentInvocationContext context,
-        CreateResponse request,
-        [EnumeratorCancellation] CancellationToken cancellationToken)
-    {
         // Create options with properties from the request
         var chatOptions = new ChatOptions
         {

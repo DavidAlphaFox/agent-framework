@@ -18,13 +18,11 @@ namespace Microsoft.Agents.AI.Hosting.OpenAI.Responses;
 internal sealed class AIAgentResponseExecutor : IResponseExecutor
 {
     private readonly AIAgent _agent;
-    private readonly IConversationStorage? _conversationStorage;
 
-    public AIAgentResponseExecutor(AIAgent agent, IConversationStorage? conversationStorage = null)
+    public AIAgentResponseExecutor(AIAgent agent)
     {
         ArgumentNullException.ThrowIfNull(agent);
         this._agent = agent;
-        this._conversationStorage = conversationStorage;
     }
 
     public async IAsyncEnumerable<StreamingResponseEvent> ExecuteAsync(

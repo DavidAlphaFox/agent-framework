@@ -42,13 +42,7 @@ public static class MicrosoftAgentAIHostingOpenAIServiceCollectionExtensions
             var conversationStorage = sp.GetService<IConversationStorage>();
             return new InMemoryResponsesService(executor, options, conversationStorage);
         });
-        services.TryAddSingleton<IResponseExecutor>(sp =>
-        {
-            // Inject IConversationStorage if it's available (though executors no longer use it directly)
-            var conversationStorage = sp.GetService<IConversationStorage>();
-            var logger = sp.GetRequiredService<Logging.ILogger<HostedAgentResponseExecutor>>();
-            return new HostedAgentResponseExecutor(sp, logger, conversationStorage);
-        });
+        services.TryAddSingleton<IResponseExecutor, HostedAgentResponseExecutor>();
 
         return services;
     }

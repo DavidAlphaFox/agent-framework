@@ -43,18 +43,11 @@ public static partial class MicrosoftAgentAIHostingOpenAIEndpointRouteBuilderExt
 
         responsesPath ??= $"/{agent.Name}/v1/responses";
 
-        // Get or create an executor for this specific agent
-        IResponseExecutor executor;
-        InMemoryResponsesService responsesService;
-
-        // Try to get conversation storage from DI if available
-        IConversationStorage? conversationStorage = endpoints.ServiceProvider.GetService<IConversationStorage>();
-
-        executor = new AIAgentResponseExecutor(agent, conversationStorage);
-
-        // Try to get storage options from DI, or create default
-        InMemoryStorageOptions storageOptions = endpoints.ServiceProvider.GetService<InMemoryStorageOptions>() ?? new InMemoryStorageOptions();
-        responsesService = new InMemoryResponsesService(executor, storageOptions, conversationStorage);
+        // Create an executor for this agent
+        var executor = new AIAgentResponseExecutor(agent);
+        var storageOptions = endpoints.ServiceProvider.GetService<InMemoryStorageOptions>() ?? new InMemoryStorageOptions();
+        var conversationStorage = endpoints.ServiceProvider.GetService<IConversationStorage>();
+        var responsesService = new InMemoryResponsesService(executor, storageOptions, conversationStorage);
 
         var handlers = new ResponsesHttpHandler(responsesService);
 
