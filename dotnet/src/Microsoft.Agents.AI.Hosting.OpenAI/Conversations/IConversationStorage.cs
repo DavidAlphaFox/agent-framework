@@ -51,16 +51,6 @@ internal interface IConversationStorage
     // Item operations
 
     /// <summary>
-    /// Adds an item (message, function call, etc.) to a conversation.
-    /// Items are ItemResource objects from the Responses API.
-    /// </summary>
-    /// <param name="conversationId">The conversation ID to add the item to.</param>
-    /// <param name="item">The item to add.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The created item.</returns>
-    Task<ItemResource> AddItemAsync(string conversationId, ItemResource item, CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Adds multiple items to a conversation atomically.
     /// Items are ItemResource objects from the Responses API.
     /// </summary>

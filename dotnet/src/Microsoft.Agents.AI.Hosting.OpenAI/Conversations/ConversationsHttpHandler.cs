@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Agents.AI.Hosting.OpenAI.Conversations.Models;
@@ -99,11 +100,8 @@ internal sealed class ConversationsHttpHandler
         // Add initial items if provided
         if (request.Items is { Count: > 0 })
         {
-            foreach (ItemParam itemParam in request.Items)
-            {
-                ItemResource itemToAdd = itemParam.ToItemResource();
-                await this._storage.AddItemAsync(created.Id, itemToAdd, cancellationToken).ConfigureAwait(false);
-            }
+            List<ItemResource> itemsToAdd = [.. request.Items.Select(itemParam => itemParam.ToItemResource())];
+            await this._storage.AddItemsAsync(created.Id, itemsToAdd, cancellationToken).ConfigureAwait(false);
         }
 
         // Add to conversation index if available and agent_id is provided in metadata
@@ -224,13 +222,8 @@ internal sealed class ConversationsHttpHandler
             });
         }
 
-        var createdItems = new List<ItemResource>();
-        foreach (ItemParam itemParam in request.Items)
-        {
-            ItemResource itemToAdd = itemParam.ToItemResource();
-            ItemResource created = await this._storage.AddItemAsync(conversationId, itemToAdd, cancellationToken).ConfigureAwait(false);
-            createdItems.Add(created);
-        }
+        List<ItemResource> createdItems = [.. request.Items.Select(itemParam => itemParam.ToItemResource())];
+        await this._storage.AddItemsAsync(conversationId, createdItems, cancellationToken).ConfigureAwait(false);
 
         return Results.Ok(new ListResponse<ItemResource>
         {

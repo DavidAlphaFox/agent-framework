@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -184,7 +184,7 @@ public sealed class InMemoryConversationStorageTests
     }
 
     [Fact]
-    public async Task AddItemAsync_SuccessAsync()
+    public async Task AddItemsAsync_SuccessAsync()
     {
         // Arrange
         var storage = new InMemoryConversationStorage();
@@ -203,15 +203,16 @@ public sealed class InMemoryConversationStorageTests
         };
 
         // Act
-        ItemResource result = await storage.AddItemAsync("conv_items123", item);
+        await storage.AddItemsAsync("conv_items123", [item]);
 
         // Assert
+        ItemResource? result = await storage.GetItemAsync("conv_items123", item.Id);
         Assert.NotNull(result);
         Assert.Equal(item.Id, result.Id);
     }
 
     [Fact]
-    public async Task AddItemAsync_NonExistentConversation_ThrowsInvalidOperationExceptionAsync()
+    public async Task AddItemsAsync_NonExistentConversation_ThrowsInvalidOperationExceptionAsync()
     {
         // Arrange
         var storage = new InMemoryConversationStorage();
@@ -223,12 +224,12 @@ public sealed class InMemoryConversationStorageTests
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => storage.AddItemAsync("conv_nonexistent", item));
+            () => storage.AddItemsAsync("conv_nonexistent", [item]));
         Assert.Contains("not found", exception.Message);
     }
 
     [Fact]
-    public async Task AddItemAsync_DuplicateItemId_ThrowsInvalidOperationExceptionAsync()
+    public async Task AddItemsAsync_DuplicateItemId_ThrowsInvalidOperationExceptionAsync()
     {
         // Arrange
         var storage = new InMemoryConversationStorage();
@@ -246,11 +247,11 @@ public sealed class InMemoryConversationStorageTests
             Content = [new ItemContentInputText { Text = "Hello" }]
         };
 
-        await storage.AddItemAsync("conv_dup_items", item);
+        await storage.AddItemsAsync("conv_dup_items", [item]);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => storage.AddItemAsync("conv_dup_items", item));
+            () => storage.AddItemsAsync("conv_dup_items", [item]));
         Assert.Contains("already exists", exception.Message);
     }
 
@@ -272,7 +273,7 @@ public sealed class InMemoryConversationStorageTests
             Id = "msg_getitem123",
             Content = [new ItemContentInputText { Text = "Test message" }]
         };
-        await storage.AddItemAsync("conv_getitem", item);
+        await storage.AddItemsAsync("conv_getitem", [item]);
 
         // Act
         ItemResource? result = await storage.GetItemAsync("conv_getitem", "msg_getitem123");
@@ -347,9 +348,9 @@ public sealed class InMemoryConversationStorageTests
             Content = [new ItemContentInputText { Text = "Third" }]
         };
 
-        await storage.AddItemAsync("conv_list", item1);
-        await storage.AddItemAsync("conv_list", item2);
-        await storage.AddItemAsync("conv_list", item3);
+        await storage.AddItemsAsync("conv_list", [item1]);
+        await storage.AddItemsAsync("conv_list", [item2]);
+        await storage.AddItemsAsync("conv_list", [item3]);
 
         // Act
         ListResponse<ItemResource> result = await storage.ListItemsAsync("conv_list");
@@ -390,8 +391,8 @@ public sealed class InMemoryConversationStorageTests
             Content = [new ItemContentInputText { Text = "Second" }]
         };
 
-        await storage.AddItemAsync("conv_asc", item1);
-        await storage.AddItemAsync("conv_asc", item2);
+        await storage.AddItemsAsync("conv_asc", [item1]);
+        await storage.AddItemsAsync("conv_asc", [item2]);
 
         // Act
         ListResponse<ItemResource> result = await storage.ListItemsAsync("conv_asc", order: SortOrder.Ascending);
@@ -422,7 +423,7 @@ public sealed class InMemoryConversationStorageTests
                 Id = $"msg_{i:D3}",
                 Content = [new ItemContentInputText { Text = $"Message {i}" }]
             };
-            await storage.AddItemAsync("conv_limit", item);
+            await storage.AddItemsAsync("conv_limit", [item]);
         }
 
         // Act
@@ -455,7 +456,7 @@ public sealed class InMemoryConversationStorageTests
                 Id = $"msg_{i:D3}",
                 Content = [new ItemContentInputText { Text = $"Message {i}" }]
             };
-            await storage.AddItemAsync("conv_after", item);
+            await storage.AddItemsAsync("conv_after", [item]);
         }
 
         // Act
@@ -488,7 +489,7 @@ public sealed class InMemoryConversationStorageTests
                 Id = $"msg_{i:D3}",
                 Content = [new ItemContentInputText { Text = $"Message {i}" }]
             };
-            await storage.AddItemAsync("conv_clamp", item);
+            await storage.AddItemsAsync("conv_clamp", [item]);
         }
 
         // Act - Test upper bound
@@ -558,7 +559,7 @@ public sealed class InMemoryConversationStorageTests
             Id = "msg_delete",
             Content = [new ItemContentInputText { Text = "Delete me" }]
         };
-        await storage.AddItemAsync("conv_delitem", item);
+        await storage.AddItemsAsync("conv_delitem", [item]);
 
         // Act
         bool result = await storage.DeleteItemAsync("conv_delitem", "msg_delete");
@@ -629,7 +630,7 @@ public sealed class InMemoryConversationStorageTests
                     Id = $"msg_{index:D3}",
                     Content = [new ItemContentInputText { Text = $"Message {index}" }]
                 };
-                await storage.AddItemAsync("conv_concurrent", item);
+                await storage.AddItemsAsync("conv_concurrent", [item]);
             }));
         }
 

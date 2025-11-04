@@ -87,23 +87,6 @@ internal sealed class InMemoryConversationStorage : IConversationStorage, IDispo
     }
 
     /// <inheritdoc />
-    public Task<ItemResource> AddItemAsync(string conversationId, ItemResource item, CancellationToken cancellationToken = default)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(conversationId, nameof(conversationId));
-
-        if (!this._cache.TryGetValue(conversationId, out ConversationState? state) || state is null)
-        {
-            throw new InvalidOperationException($"Conversation '{conversationId}' not found.");
-        }
-
-        state.AddItem(item);
-        // Touch the cache entry to reset expiration
-        var entryOptions = this._options.ToMemoryCacheEntryOptions();
-        this._cache.Set(conversationId, state, entryOptions);
-        return Task.FromResult(item);
-    }
-
-    /// <inheritdoc />
     public Task AddItemsAsync(string conversationId, IEnumerable<ItemResource> items, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(conversationId, nameof(conversationId));
