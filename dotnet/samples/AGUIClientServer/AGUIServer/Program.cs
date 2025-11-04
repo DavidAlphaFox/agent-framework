@@ -18,20 +18,6 @@ var client = new AzureOpenAIClient(
         new DefaultAzureCredential())
     .GetChatClient(deploymentName);
 
-var chat = new FunctionInvokingChatClient(client.AsIChatClient());
-var options = new ChatOptions
-{
-    Tools = [
-        AIFunctionFactory.Create(
-            () => DateTimeOffset.UtcNow,
-            name: "get_current_time",
-            description: "Get the current UTC time."
-        )
-    ]
-};
-
-var response = await chat.GetResponseAsync("What time is it?", options);
-
 // Map the AG-UI agent endpoint
 app.MapAGUIAgent("/", (messages, tools) =>
 {
