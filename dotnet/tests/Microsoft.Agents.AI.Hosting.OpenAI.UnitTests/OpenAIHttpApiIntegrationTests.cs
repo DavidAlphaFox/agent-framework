@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft. All rights reserved.
+﻿// Copyright (c) Microsoft. All rights reserved.
 
 using System;
 using System.Linq;
@@ -237,7 +237,7 @@ public sealed class OpenAIHttpApiIntegrationTests : IAsyncDisposable
             using var getRespDoc = await this.ParseResponseAsync(getResponseResponse);
             finalStatus = getRespDoc.RootElement.GetProperty("status").GetString()!;
             if (getRespDoc.RootElement.TryGetProperty("error", out var error) &&
-                error.ValueKind == System.Text.Json.JsonValueKind.Object &&
+                error.ValueKind == JsonValueKind.Object &&
                 error.TryGetProperty("message", out var messageElement))
             {
                 errorMessage = messageElement.GetString();
