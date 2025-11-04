@@ -180,7 +180,7 @@ public sealed class OpenAIConversationsConformanceTests : IAsyncDisposable
     /// </summary>
     private static async Task<HttpResponseMessage> SendPostRequestAsync(HttpClient client, string path, string requestJson)
     {
-        StringContent content = new(requestJson, Encoding.UTF8, "application/json");
+        using StringContent content = new(requestJson, Encoding.UTF8, "application/json");
         return await client.PostAsync(new Uri(path, UriKind.Relative), content);
     }
 
@@ -725,7 +725,7 @@ public sealed class OpenAIConversationsConformanceTests : IAsyncDisposable
         HttpClient client = await this.CreateTestServerAsync("error-json-agent", "You are a helpful assistant.", "Test response");
 
         // Act
-        StringContent content = new(invalidJson, Encoding.UTF8, "application/json");
+        using StringContent content = new(invalidJson, Encoding.UTF8, "application/json");
         HttpResponseMessage response = await client.PostAsync(new Uri("/v1/conversations", UriKind.Relative), content);
 
         // Assert - Response is 400
@@ -888,15 +888,14 @@ public sealed class OpenAIConversationsConformanceTests : IAsyncDisposable
         Assert.True(content.GetArrayLength() > 1, "Should have text and image content");
 
         // Assert - Has input_image content type
-        bool hasImage = false;
-        foreach (var part in content.EnumerateArray())
+        JsonElement? imagePart = content.EnumerateArray()
+            .Where(part => part.GetProperty("type").GetString() == "input_image")
+            .Cast<JsonElement?>()
+            .FirstOrDefault();
+        bool hasImage = imagePart.HasValue;
+        if (hasImage)
         {
-            if (part.GetProperty("type").GetString() == "input_image")
-            {
-                hasImage = true;
-                AssertJsonPropertyExists(part, "image_url");
-                break;
-            }
+            AssertJsonPropertyExists(imagePart!.Value, "image_url");
         }
         Assert.True(hasImage, "Request should have input_image content");
 

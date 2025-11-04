@@ -82,25 +82,20 @@ public sealed class OpenAIHttpApiIntegrationTests : IAsyncDisposable
         Assert.True(items.GetArrayLength() > 0, "Conversation should have items after response completion");
 
         // Find the assistant message in the items
-        bool foundAssistantMessage = false;
-        foreach (var item in items.EnumerateArray())
-        {
-            if (item.GetProperty("type").GetString() == "message" &&
-                item.GetProperty("role").GetString() == "assistant")
+        bool foundAssistantMessage = items.EnumerateArray()
+            .Where(item => item.GetProperty("type").GetString() == "message" &&
+                          item.GetProperty("role").GetString() == "assistant")
+            .Any(item =>
             {
-                var itemContent = item.GetProperty("content");
+                JsonElement itemContent = item.GetProperty("content");
                 if (itemContent.GetArrayLength() > 0)
                 {
-                    var firstContent = itemContent[0];
-                    if (firstContent.GetProperty("type").GetString() == "output_text" &&
-                        firstContent.GetProperty("text").GetString() == ExpectedResponse)
-                    {
-                        foundAssistantMessage = true;
-                        break;
-                    }
+                    JsonElement firstContent = itemContent[0];
+                    return firstContent.GetProperty("type").GetString() == "output_text" &&
+                           firstContent.GetProperty("text").GetString() == ExpectedResponse;
                 }
-            }
-        }
+                return false;
+            });
 
         Assert.True(foundAssistantMessage, "Conversation should contain the assistant's response message");
     }
@@ -161,25 +156,20 @@ public sealed class OpenAIHttpApiIntegrationTests : IAsyncDisposable
         Assert.True(items.GetArrayLength() > 0, "Conversation should have items after streaming response completion");
 
         // Find the assistant message in the items
-        bool foundAssistantMessage = false;
-        foreach (var item in items.EnumerateArray())
-        {
-            if (item.GetProperty("type").GetString() == "message" &&
-                item.GetProperty("role").GetString() == "assistant")
+        bool foundAssistantMessage = items.EnumerateArray()
+            .Where(item => item.GetProperty("type").GetString() == "message" &&
+                          item.GetProperty("role").GetString() == "assistant")
+            .Any(item =>
             {
-                var itemContent = item.GetProperty("content");
+                JsonElement itemContent = item.GetProperty("content");
                 if (itemContent.GetArrayLength() > 0)
                 {
-                    var firstContent = itemContent[0];
-                    if (firstContent.GetProperty("type").GetString() == "output_text" &&
-                        firstContent.GetProperty("text").GetString() == ExpectedResponse)
-                    {
-                        foundAssistantMessage = true;
-                        break;
-                    }
+                    JsonElement firstContent = itemContent[0];
+                    return firstContent.GetProperty("type").GetString() == "output_text" &&
+                           firstContent.GetProperty("text").GetString() == ExpectedResponse;
                 }
-            }
-        }
+                return false;
+            });
 
         Assert.True(foundAssistantMessage, "Conversation should contain the assistant's response message");
     }
@@ -255,25 +245,20 @@ public sealed class OpenAIHttpApiIntegrationTests : IAsyncDisposable
         Assert.True(items.GetArrayLength() > 0, "Conversation should have items after background response completion");
 
         // Find the assistant message in the items
-        bool foundAssistantMessage = false;
-        foreach (var item in items.EnumerateArray())
-        {
-            if (item.GetProperty("type").GetString() == "message" &&
-                item.GetProperty("role").GetString() == "assistant")
+        bool foundAssistantMessage = items.EnumerateArray()
+            .Where(item => item.GetProperty("type").GetString() == "message" &&
+                          item.GetProperty("role").GetString() == "assistant")
+            .Any(item =>
             {
-                var itemContent = item.GetProperty("content");
+                JsonElement itemContent = item.GetProperty("content");
                 if (itemContent.GetArrayLength() > 0)
                 {
-                    var firstContent = itemContent[0];
-                    if (firstContent.GetProperty("type").GetString() == "output_text" &&
-                        firstContent.GetProperty("text").GetString() == ExpectedResponse)
-                    {
-                        foundAssistantMessage = true;
-                        break;
-                    }
+                    JsonElement firstContent = itemContent[0];
+                    return firstContent.GetProperty("type").GetString() == "output_text" &&
+                           firstContent.GetProperty("text").GetString() == ExpectedResponse;
                 }
-            }
-        }
+                return false;
+            });
 
         Assert.True(foundAssistantMessage, "Conversation should contain the assistant's response message");
     }
@@ -328,24 +313,19 @@ public sealed class OpenAIHttpApiIntegrationTests : IAsyncDisposable
         Assert.True(items.GetArrayLength() > 0, "Conversation should have items after streaming response completion");
 
         // Find the assistant message in the items
-        bool foundAssistantMessage = false;
-        foreach (var item in items.EnumerateArray())
-        {
-            if (item.GetProperty("type").GetString() == "message" &&
-                item.GetProperty("role").GetString() == "assistant")
+        bool foundAssistantMessage = items.EnumerateArray()
+            .Where(item => item.GetProperty("type").GetString() == "message" &&
+                          item.GetProperty("role").GetString() == "assistant")
+            .Any(item =>
             {
-                var itemContent = item.GetProperty("content");
+                JsonElement itemContent = item.GetProperty("content");
                 if (itemContent.GetArrayLength() > 0)
                 {
-                    var firstContent = itemContent[0];
-                    if (firstContent.GetProperty("type").GetString() == "output_text")
-                    {
-                        foundAssistantMessage = true;
-                        break;
-                    }
+                    JsonElement firstContent = itemContent[0];
+                    return firstContent.GetProperty("type").GetString() == "output_text";
                 }
-            }
-        }
+                return false;
+            });
 
         Assert.True(foundAssistantMessage, "Conversation should contain the assistant's response message");
     }
@@ -390,7 +370,7 @@ public sealed class OpenAIHttpApiIntegrationTests : IAsyncDisposable
     /// </summary>
     private async Task<HttpResponseMessage> SendPostRequestAsync(HttpClient client, string path, string requestJson)
     {
-        StringContent content = new(requestJson, Encoding.UTF8, "application/json");
+        using StringContent content = new(requestJson, Encoding.UTF8, "application/json");
         return await client.PostAsync(new Uri(path, UriKind.Relative), content);
     }
 
