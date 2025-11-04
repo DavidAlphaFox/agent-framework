@@ -95,6 +95,7 @@ public static class AGUIEndpointRouteBuilderExtensions
             var events = agent.RunStreamingAsync(
                 messages,
                 cancellationToken: cancellationToken)
+                .AsChatResponseUpdatesAsync()
                 .AsAGUIEventStreamAsync(
                     input.ThreadId,
                     input.RunId,
