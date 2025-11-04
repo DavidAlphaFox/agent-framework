@@ -471,7 +471,7 @@ internal sealed class InMemoryResponsesService : IResponsesService, IDisposable
 
             state.AddStreamingEvent(cancelledEvent);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             // Determine error code based on exception message
             // Azure OpenAI returns HTTP 400 with "content_filter" in the error message
