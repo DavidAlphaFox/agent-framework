@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -31,14 +32,14 @@ public sealed class OpenAIConversationsConformanceTests : IAsyncDisposable
     /// </summary>
     private static string LoadTraceFile(string relativePath)
     {
-        var fullPath = System.IO.Path.Combine(TracesBasePath, relativePath);
+        var fullPath = Path.Combine(TracesBasePath, relativePath);
 
-        if (!System.IO.File.Exists(fullPath))
+        if (!File.Exists(fullPath))
         {
-            throw new System.IO.FileNotFoundException($"Conformance trace file not found: {fullPath}");
+            throw new FileNotFoundException($"Conformance trace file not found: {fullPath}");
         }
 
-        return System.IO.File.ReadAllText(fullPath);
+        return File.ReadAllText(fullPath);
     }
 
     /// <summary>
