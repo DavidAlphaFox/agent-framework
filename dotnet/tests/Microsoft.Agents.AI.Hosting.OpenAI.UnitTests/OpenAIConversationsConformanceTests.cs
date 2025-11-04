@@ -1182,18 +1182,14 @@ public sealed class OpenAIConversationsConformanceTests : IAsyncDisposable
         {
             var line = lines[i].TrimEnd('\r');
 
-            if (line.StartsWith("event: ", StringComparison.Ordinal))
+            if (line.StartsWith("event: ", StringComparison.Ordinal) && i + 1 < lines.Length)
             {
-                // Next line should have the data
-                if (i + 1 < lines.Length)
+                var dataLine = lines[i + 1].TrimEnd('\r');
+                if (dataLine.StartsWith("data: ", StringComparison.Ordinal))
                 {
-                    var dataLine = lines[i + 1].TrimEnd('\r');
-                    if (dataLine.StartsWith("data: ", StringComparison.Ordinal))
-                    {
-                        var jsonData = dataLine.Substring("data: ".Length);
-                        var doc = JsonDocument.Parse(jsonData);
-                        events.Add(doc.RootElement.Clone());
-                    }
+                    var jsonData = dataLine.Substring("data: ".Length);
+                    var doc = JsonDocument.Parse(jsonData);
+                    events.Add(doc.RootElement.Clone());
                 }
             }
         }

@@ -101,15 +101,9 @@ internal sealed class InMemoryAgentConversationIndex : IAgentConversationIndex, 
     {
         ArgumentException.ThrowIfNullOrEmpty(agentId);
 
-        string[] conversations;
-        if (this._cache.TryGetValue(agentId, out ConversationSet? conversationSet) && conversationSet is not null)
-        {
-            conversations = conversationSet.GetAll();
-        }
-        else
-        {
-            conversations = [];
-        }
+        string[] conversations = (this._cache.TryGetValue(agentId, out ConversationSet? conversationSet) && conversationSet is not null)
+            ? conversationSet.GetAll()
+            : [];
 
         return new ListResponse<string>
         {
