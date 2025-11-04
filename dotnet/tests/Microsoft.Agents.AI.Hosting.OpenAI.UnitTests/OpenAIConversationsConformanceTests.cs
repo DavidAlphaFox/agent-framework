@@ -214,8 +214,6 @@ public sealed class OpenAIConversationsConformanceTests : IAsyncDisposable
     {
         // Arrange
         string requestJson = LoadTraceFile("basic/create_conversation_request.json");
-        using var expectedResponseDoc = LoadTraceDocument("basic/create_conversation_response.json");
-        var expectedResponse = expectedResponseDoc.RootElement;
 
         HttpClient client = await this.CreateTestServerAsync("basic-agent", "You are a helpful assistant.", "The capital of France is Paris.");
 

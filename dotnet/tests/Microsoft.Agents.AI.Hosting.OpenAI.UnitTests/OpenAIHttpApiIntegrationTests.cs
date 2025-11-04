@@ -79,10 +79,6 @@ public sealed class OpenAIHttpApiIntegrationTests : IAsyncDisposable
         Assert.Equal("list", itemsList.GetProperty("object").GetString());
         var items = itemsList.GetProperty("data");
 
-        // Debug output
-        Console.WriteLine($"Items count: {items.GetArrayLength()}");
-        Console.WriteLine($"Response output count: {output.GetArrayLength()}");
-
         Assert.True(items.GetArrayLength() > 0, "Conversation should have items after response completion");
 
         // Find the assistant message in the items

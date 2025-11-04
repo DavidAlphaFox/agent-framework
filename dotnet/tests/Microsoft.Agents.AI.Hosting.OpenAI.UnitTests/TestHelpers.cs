@@ -626,18 +626,11 @@ internal static class TestHelpers
             ChatOptions? options = null,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            Console.WriteLine("CustomContentMockChatClient.GetStreamingResponseAsync called!");
             await Task.Delay(1, cancellationToken);
 
             ChatMessage lastMessage = messages.Last();
             IEnumerable<AIContent> contents = this._contentProvider(lastMessage);
             List<AIContent> contentList = contents.ToList();
-
-            Console.WriteLine($"Content provider returned {contentList.Count} content items");
-            foreach (var content in contentList)
-            {
-                Console.WriteLine($"Content type: {content.GetType().Name}");
-            }
 
             // Stream each content item separately
             for (int i = 0; i < contentList.Count; i++)
@@ -655,7 +648,6 @@ internal static class TestHelpers
                     }));
                 }
 
-                Console.WriteLine($"Yielding update {i} with {updateContents.Count} contents");
                 yield return new ChatResponseUpdate
                 {
                     Contents = updateContents,

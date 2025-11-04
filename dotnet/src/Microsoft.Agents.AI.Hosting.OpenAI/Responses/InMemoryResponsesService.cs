@@ -399,7 +399,7 @@ internal sealed class InMemoryResponsesService : IResponsesService, IDisposable
     {
         await Task.CompletedTask.ConfigureAwait(ConfigureAwaitOptions.ForceYielding);
         var request = state.Request!;
-        var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, state.CancellationTokenSource!.Token);
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, state.CancellationTokenSource!.Token);
 
         try
         {
@@ -503,7 +503,6 @@ internal sealed class InMemoryResponsesService : IResponsesService, IDisposable
         {
             // Signal one final time to unblock any waiting consumers
             state.SignalUpdate();
-            linkedCts.Dispose();
         }
     }
 
