@@ -95,13 +95,6 @@ internal sealed class ResponsesHttpHandler
                 }
             });
         }
-        catch (Exception ex)
-        {
-            return Results.Problem(
-                detail: ex.Message,
-                statusCode: StatusCodes.Status500InternalServerError,
-                title: "Error creating response");
-        }
     }
 
     /// <summary>
@@ -114,42 +107,32 @@ internal sealed class ResponsesHttpHandler
         [FromQuery] int? starting_after,
         CancellationToken cancellationToken)
     {
-        try
+        // If streaming is requested, return SSE stream
+        if (stream == true)
         {
-            // If streaming is requested, return SSE stream
-            if (stream == true)
+            var streamingResponse = this._responsesService.GetResponseStreamingAsync(
+                responseId,
+                startingAfter: starting_after,
+                cancellationToken: cancellationToken);
+
+            return new SseJsonResult<StreamingResponseEvent>(
+                streamingResponse,
+                static evt => evt.Type,
+                OpenAIHostingJsonContext.Default.StreamingResponseEvent);
+        }
+
+        // Non-streaming: return the response object
+        var response = await this._responsesService.GetResponseAsync(responseId, cancellationToken).ConfigureAwait(false);
+        return response is not null
+            ? Results.Ok(response)
+            : Results.NotFound(new ErrorResponse
             {
-                var streamingResponse = this._responsesService.GetResponseStreamingAsync(
-                    responseId,
-                    startingAfter: starting_after,
-                    cancellationToken: cancellationToken);
-
-                return new SseJsonResult<StreamingResponseEvent>(
-                    streamingResponse,
-                    static evt => evt.Type,
-                    OpenAIHostingJsonContext.Default.StreamingResponseEvent);
-            }
-
-            // Non-streaming: return the response object
-            var response = await this._responsesService.GetResponseAsync(responseId, cancellationToken).ConfigureAwait(false);
-            return response is not null
-                ? Results.Ok(response)
-                : Results.NotFound(new ErrorResponse
+                Error = new ErrorDetails
                 {
-                    Error = new ErrorDetails
-                    {
-                        Message = $"Response '{responseId}' not found.",
-                        Type = "invalid_request_error"
-                    }
-                });
-        }
-        catch (Exception ex)
-        {
-            return Results.Problem(
-                detail: ex.Message,
-                statusCode: StatusCodes.Status404NotFound,
-                title: "Response not found");
-        }
+                    Message = $"Response '{responseId}' not found.",
+                    Type = "invalid_request_error"
+                }
+            });
     }
 
     /// <summary>
@@ -175,13 +158,6 @@ internal sealed class ResponsesHttpHandler
                 }
             });
         }
-        catch (Exception ex)
-        {
-            return Results.Problem(
-                detail: ex.Message,
-                statusCode: StatusCodes.Status500InternalServerError,
-                title: "Error cancelling response");
-        }
     }
 
     /// <summary>
@@ -191,27 +167,17 @@ internal sealed class ResponsesHttpHandler
         string responseId,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            var deleted = await this._responsesService.DeleteResponseAsync(responseId, cancellationToken).ConfigureAwait(false);
-            return deleted
-                ? Results.Ok(new DeleteResponse { Id = responseId, Object = "response", Deleted = true })
-                : Results.NotFound(new ErrorResponse
+        var deleted = await this._responsesService.DeleteResponseAsync(responseId, cancellationToken).ConfigureAwait(false);
+        return deleted
+            ? Results.Ok(new DeleteResponse { Id = responseId, Object = "response", Deleted = true })
+            : Results.NotFound(new ErrorResponse
+            {
+                Error = new ErrorDetails
                 {
-                    Error = new ErrorDetails
-                    {
-                        Message = $"Response '{responseId}' not found.",
-                        Type = "invalid_request_error"
-                    }
-                });
-        }
-        catch (Exception ex)
-        {
-            return Results.Problem(
-                detail: ex.Message,
-                statusCode: StatusCodes.Status500InternalServerError,
-                title: "Error deleting response");
-        }
+                    Message = $"Response '{responseId}' not found.",
+                    Type = "invalid_request_error"
+                }
+            });
     }
 
     /// <summary>
@@ -247,13 +213,6 @@ internal sealed class ResponsesHttpHandler
                     Type = "invalid_request_error"
                 }
             });
-        }
-        catch (Exception ex)
-        {
-            return Results.Problem(
-                detail: ex.Message,
-                statusCode: StatusCodes.Status500InternalServerError,
-                title: "Error listing input items");
         }
     }
 }
